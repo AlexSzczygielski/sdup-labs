@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 module cordic_beh();
 parameter nr_iterat= 12; // number of iterations (max 13)
-real t_angle = 60 * 3.14159265359 / 180; // input angle [rad]
-real t_cos= 0.5; // proper (target) cosine output value
+real t_angle = 45 * 3.14159265359 / 180; // input angle [rad]
+real t_cos= 0.707106781; // proper (target) cosine output value
 //Table of arctan (1/2^i)
 // Note. Table initialization below is not correct for Verilog. Select System-Verilog mode
 // in your simulator in the case of syntax errors
