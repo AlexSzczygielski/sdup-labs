@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module cordic_beh_fixedpoint();
+module cordic_beh_fixedpoint_2();
 parameter integer FXP_SCALE = 1024;
 reg signed [11:0] t_angle = 0.5236 * FXP_SCALE; //Input angle
 reg signed [23:0] cos = 1.0 * FXP_SCALE; //Initial condition
