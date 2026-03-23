@@ -39,9 +39,7 @@ end //if
 sin_out= sin * Kn[i];
 cos_out= cos * Kn[i];
 angle_deg= angle * 180 / 3.14159265359;
-#10
-$display("i=%02d, angle=%f [deg], sin=%f, cos=%f, cos_error=%f",
- i, angle_deg, sin_out,cos_out, (cos_out-t_cos));
+
 end //for
 end //initial
 endmodule
