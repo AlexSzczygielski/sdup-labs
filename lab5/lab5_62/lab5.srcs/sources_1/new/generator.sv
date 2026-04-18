@@ -20,15 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module generator(input clock, input[11:0] sin, input[11:0] cos, input valid_in, output reg [11:0] result_x, output reg [11:0] result_y);
-    reg[14:0] temp1;
-    reg[14:0] temp2; 
+module generator(input clock, input[14:0] sin, input[14:0] cos, input valid_in, output reg [14:0] result_x, output reg [14:0] result_y);
     always @(posedge clock) begin
         if(valid_in == 1)begin
-            temp1 <= (cos << 1) + cos;
-            temp2 <= (sin << 3) - sin;
-            result_x <= temp1;
-            result_y <= temp2;
+            result_x <= (cos << 1) + cos;
+            result_y <= (sin << 3) - sin;
         end
         else begin
             result_x <= 0;

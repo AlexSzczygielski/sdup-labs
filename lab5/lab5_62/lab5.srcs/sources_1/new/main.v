@@ -91,7 +91,7 @@ endmodule
 // Design Name: The pipelined custom processor for cordic algorithm
 // Module Name: cordic_pipe_rtl
 //////////////////////////////////////////////////////////////////////////////////
-module cordic_pipe_rtl( clock, reset, ce, angle_in, sin_out, cos_out, valid_out );
+module cordic_pipe_rtl( clock, reset, ce, angle_in, sin_out, cos_out, valid_out, outside_state, sign_sin, sign_cos );
 parameter integer W = 12; //Width of the fixed-point (12:10) representation
 parameter FXP_MUL = 1024; //Scaling factor for fixed-point (12:10) representation
 parameter PIPE_LATENCY = 15; // Input->output delay in clock cycles
@@ -99,6 +99,8 @@ input clock, reset, ce;
 input [W-1:0] angle_in; //Angle in radians
 output [W-1:0] sin_out, cos_out;
 output valid_out; //Valid data output flag
+input [1:0] outside_state;
+output [14:0] sign_sin, sign_cos;
 //Cordic look-up table
 reg signed [11:0] atan[0:10] = { 12'b001100100100, 12'b000111011011, 12'b000011111011, 12'b000001111111,
  12'b000001000000, 12'b000000100000, 12'b000000010000, 12'b000000001000,
@@ -110,6 +112,30 @@ wire signed [W-1:0] t_angle_tab [0:11]; //Target angle also must be pipelined
 wire signed [W-1:0] angle_tab [0:11];
 //
 reg unsigned [4:0] valid_cnt; //Counts pipeline delay
+
+reg [1:0] state_shifter [0:PIPE_LATENCY];
+
+integer i; // Zmienna pomocnicza do pêtli
+
+always @(posedge clock) begin
+    if (reset) begin
+        // Podczas resetu czyœcimy ca³¹ liniê opóŸniaj¹c¹
+        for (i = 0; i <= PIPE_LATENCY; i = i + 1) begin
+            state_shifter[i] <= 2'b0;
+        end
+    end 
+    else if (ce) begin
+        // KROK 1: Na pocz¹tku linii l¹duje aktualny stan z wejœcia
+        state_shifter[0] <= outside_state;
+
+        // KROK 2: Przesuwamy pozosta³e stany o jedn¹ pozycjê dalej
+        for (i = 1; i <= PIPE_LATENCY; i = i + 1) begin
+            state_shifter[i] <= state_shifter[i-1];
+        end
+    end
+end
+
+
 //Synchroniuos activity: latency counter, angle_in latch
 always@(posedge clock)
 begin
@@ -138,4 +164,20 @@ endgenerate //end of the generate block
 //Stage a14 - 18: scaling of the results
  mul_Kn mul_Kn_sin ( clock, ce, sin_tab[11], sin_out );
  mul_Kn mul_Kn_cos ( clock, ce, cos_tab[11], cos_out );
+ 
+ reg [1:0] delayed_state;
+assign delayed_state = state_shifter[PIPE_LATENCY];
+ 
+ assign sign_sin = (delayed_state == 0) ? sin_out :
+ (delayed_state == 1) ? sin_out :
+ (delayed_state == 2) ? ~sin_out + 1 :
+ (delayed_state == 3) ? ~sin_out + 1 :
+ 0;
+ 
+ assign sign_cos = (delayed_state == 0) ? cos_out :
+ (delayed_state == 1) ? ~cos_out + 1 :
+ (delayed_state == 2) ? ~cos_out + 1 :
+ (delayed_state == 3) ? cos_out :
+ 0;
+ 
 endmodule
